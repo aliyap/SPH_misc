@@ -22,7 +22,7 @@ Viewer::Viewer(const QGLFormat& format, QWidget *parent)
 
     mStepTimer = new QTimer(this);
     connect(mTimer, SIGNAL(timeout()), this, SLOT(step()));
-    mTimer->start(1000/25);
+    mTimer->start(1000/30);
 
     createTimer = new QTimer(this);
     connect(createTimer, SIGNAL(timeout()), this, SLOT(createParticle()));

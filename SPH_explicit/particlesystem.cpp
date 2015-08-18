@@ -10,7 +10,7 @@ using namespace Eigen;
 ParticleSystem::ParticleSystem()
 {
     KERNEL = 0.04f;
-    TIMESTAMP = 0.000009;
+    TIMESTAMP = 0.0000009;
     REST_DENSITY = 1000.0f;
     GRAVITY_X = 0.0f;
     GRAVITY_Y = 0.0f;
@@ -333,7 +333,7 @@ void ParticleSystem::Step() {
         for (int j = 0; j < num_particles; j++) {
             if ((neighbors[i][j]) < 0.0f) continue;
             float r =  sqrt(neighbors[i][j]);
-            float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+            float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
             float delta_vx = (Particles[j].vx - Particles[i].vx);
             float delta_vy = Particles[j].vy - Particles[i].vy;
             float Wij_x = gradient * (Particles[i].x - Particles[j].x);
@@ -354,7 +354,7 @@ void ParticleSystem::Step() {
         for (int j = 0; j < num_particles; j++) {
             if ((neighbors[i][j]) < 0.0f) continue;
             float r = sqrt(neighbors[i][j]);
-            float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+            float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
             float inner_sum[4] = {0.0f, 0.0f, 0.0f, 0.0f};
             float Wij_x = gradient * (Particles[i].x - Particles[j].x);
             float Wij_y = gradient * (Particles[i].y - Particles[j].y);
@@ -401,13 +401,13 @@ void ParticleSystem::Step() {
                     for (int j = 0; j < num_particles; j++) {
                         if ((neighbors[i][j]) < 0.0f) continue;
                         float r =  sqrt(neighbors[i][j]);
-                        float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                        float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                         C_i_grad_k[0] += gradient * (positions[i][0] - positions[j][0]) / REST_DENSITY;
                         C_i_grad_k[1] += gradient * (positions[i][1] - positions[j][1]) / REST_DENSITY;
                     }
                 } else if (neighbors[i][k] > 0.0f){
                     float r =  sqrt(neighbors[i][k]);
-                    float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                    float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                     C_i_grad_k[0] = - gradient * (positions[i][0] - positions[k][0]) / REST_DENSITY;
                     C_i_grad_k[1] = - gradient * (positions[i][1] - positions[k][1]) / REST_DENSITY;
                 }
@@ -427,7 +427,7 @@ void ParticleSystem::Step() {
             for (int j = 0; j < num_particles; j++) {
                 if (neighbors[i][j] < 0.0f) continue;
                 float r =  sqrt(neighbors[i][j]);
-                float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                 delta_p[i][0] += (lambda[i] + lambda[j]) * gradient * (positions[i][0] - positions[j][0]) / REST_DENSITY;
                 delta_p[i][1] += (lambda[i] + lambda[j]) * gradient * (positions[i][1] - positions[j][1]) / REST_DENSITY;
             }

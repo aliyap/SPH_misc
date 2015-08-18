@@ -413,7 +413,7 @@ void ParticleSystem::Step() {
                             int j = grid[index][p];
                             if ((neighbors[i][j]) < 0.0f) continue;
                             float r =  sqrt(neighbors[i][j]);
-                            float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                            float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                             C_i_grad_k[0] += gradient * (positions[i][0] - positions[j][0]) / REST_DENSITY;
                             C_i_grad_k[1] += gradient * (positions[i][1] - positions[j][1]) / REST_DENSITY;
                             C_i_grad_k[2] += gradient * (positions[i][2] - positions[j][2]) / REST_DENSITY;

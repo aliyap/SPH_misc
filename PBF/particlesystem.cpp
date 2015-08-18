@@ -18,18 +18,11 @@ ParticleSystem::ParticleSystem()
     SELF_DENSITY = MASS*POLY6*pow(KERNEL, 6);
 
     step_count = 0;
-    //world_size.x=1.28f;
-    //world_size.y=1.28f;
-    //wall_damping=-0.5f;
     VISCOSITY=6.5f/200.0f / 2.0f;
-    //surf_norm=6.0f;
-    //surf_coe=0.2f;
-
-
 
     row = 30;
     column = 30;
-    num_particles = row*column; //+ 40;
+    num_particles = row*column;
 
     int layers = 15;
     num_particles = 4 * (std::pow(1.5f, layers) - 1);
@@ -47,26 +40,6 @@ ParticleSystem::ParticleSystem()
         }
 
     }
-
-    /*
-    for (int i = 0; i < column; i++) {
-        for (int j = 0; j < row; j++) {
-            float x = -0.25f + KERNEL*0.45f * i;
-            float y = -0.25f + KERNEL * 0.45f * j;
-            float r,g, b;
-            if (i < 15 && j < 15){
-                r = 0.0f; g = 0.0f; b = 1.0f;
-            } else if (i < 15 && j >= 15) {
-                r = 1.0f; g = 0.0f; b = 1.0f;
-            } else if (i >= 15 && j < 15) {
-                r = 1.0f; g = 1.0f; b = 0.0f;
-            } else {
-                r = 0.0f; g = 1.0f; b = 1.0f;
-            }
-            Particles.push_back(Particle(x, y, 0.5f, r, g, b));
-        }
-    }*/
-
 }
 
 void ParticleSystem::createParticle() {
@@ -93,18 +66,6 @@ float * ParticleSystem::Draw(float * res, float * colors) {
     return res;
 }
 
-/*float ParticleSystem::kernel(float x, float h) {
-    float q = abs(x)/h;
-    if (q >= 1) return 0;
-    return 315.0f / (64.0f * 3.14f * pow(h, 3.0f)) * pow(1.0f-pow(q, 2.0f), 3.0f);
-}
-
-float ParticleSystem::grad_kernel(float x, float h) {
-    float q = abs(x)/h;
-    if (q>= 1) return 0;
-    return 945.0f / (64.0f * 3.14f * pow(h, 5.0f)) * x * (-pow(1-q * q, 2.0f));
-}
-*/
 void ParticleSystem::Step() {
 
     if (step_count == 20) {
@@ -168,7 +129,7 @@ void ParticleSystem::Step() {
             float temp_force;
 
             // VISCOSITY
-            temp_force = MASS * VISCOSITY * 2 * MASS / rho[j]  * r / (r * r + 0.01 * KERNEL2) * 945/ (64 * PI * pow(KERNEL, 5)) * (-pow(1-r*r/KERNEL2, 2));
+            temp_force = MASS * VISCOSITY * 2 * MASS / rho[j]  * r / (r * r + 0.01 * KERNEL2) * 945/ (32 * PI * pow(KERNEL, 5)) * (-pow(1-r*r/KERNEL2, 2));
             F_i[i][0] += temp_force * (Particles[i].vx - Particles[j].vx);
             F_i[i][1] += temp_force * (Particles[i].vy - Particles[j].vy);
         }
@@ -211,19 +172,15 @@ void ParticleSystem::Step() {
                     for (int j = 0; j < num_particles; j++) {
                         if ((neighbors[i][j]) < 0.0f) continue;
                         float r =  sqrt(neighbors[i][j]);
-                        float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                        float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                         C_i_grad_k[0] += gradient * (positions[i][0] - positions[j][0]) / REST_DENSITY;
                         C_i_grad_k[1] += gradient * (positions[i][1] - positions[j][1]) / REST_DENSITY;
                     }
-                    //cerr << "Adding SELF " << C_i_grad_k[0] << " " << C_i_grad_k[1] << endl;
                 } else if (neighbors[i][k] > 0.0f){
                     float r =  sqrt(neighbors[i][k]);
-                    float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                    float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                     C_i_grad_k[0] = - gradient * (positions[i][0] - positions[k][0]) / REST_DENSITY;
                     C_i_grad_k[1] = - gradient * (positions[i][1] - positions[k][1]) / REST_DENSITY;
-
-                    //cerr << "Adding NOT SELF x " << C_i_grad_k[0] << "\tgradient = " << gradient << " diff " << (positions[i][0] - positions[k][0]) << endl;
-                    //cerr << "Adding NOT SELF y " << C_i_grad_k[1] << "\tgradient = " << gradient << " diff " << (positions[i][1] - positions[k][1]) << endl;
                 }
 
                 denom += pow( C_i_grad_k[0], 2) + pow( C_i_grad_k[1], 2);
@@ -241,7 +198,7 @@ void ParticleSystem::Step() {
             for (int j = 0; j < num_particles; j++) {
                 if (neighbors[i][j] < 0.0f) continue;
                 float r =  sqrt(neighbors[i][j]);
-                float gradient = 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
+                float gradient = 945.0f / (32.0f * PI * pow(KERNEL, 5.0f)) * (-pow(1.0f-r*r/KERNEL2, 2.0f));
                 delta_p[i][0] += (lambda[i] + lambda[j]) * gradient * (positions[i][0] - positions[j][0]) / REST_DENSITY;
                 delta_p[i][1] += (lambda[i] + lambda[j]) * gradient * (positions[i][1] - positions[j][1]) / REST_DENSITY;
             }

@@ -159,7 +159,7 @@ void ParticleSystem::Step() {
             F_i[i][1] -= (Particles[i].y - Particles[j].y) * temp_force ;// r;
 
             // VISCOSITY
-            temp_force = MASS * VISCOSITY * MASS / rho[j] * 2  * r * r / (r * r + 0.01 * KERNEL2) * 945/ (64 * PI * pow(KERNEL, 5)) * (-pow(1-r*r/KERNEL2, 2));
+            temp_force = MASS * VISCOSITY * MASS / rho[j] * 2  * r * r / (r * r + 0.01 * KERNEL2) * 945/ (32 * PI * pow(KERNEL, 5)) * (-pow(1-r*r/KERNEL2, 2));
             //cerr << "=== " <<  temp_force * (Particles[i].vx - Particles[j].vx) << endl;
             //temp_force = MASS * VISCOSITY * MASS / rho[j] * 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (1 - r * r / KERNEL2) * (7.0f * r * r / KERNEL2 - 3.0f);
             //cerr << "" <<  temp_force * (Particles[j].vx) << endl;

@@ -7,10 +7,11 @@
 #include <math.h>
 using namespace std;
 using namespace Eigen;
+
+
 ParticleSystem::ParticleSystem()
 {
     KERNEL = 0.04f;
-    //TIMESTAMP = 0.00001;
     TIMESTAMP = 0.00007;
     REST_DENSITY = 1000.0f;
     GRAVITY_X = 0.0f;
@@ -18,15 +19,13 @@ ParticleSystem::ParticleSystem()
     MASS = 0.018;
     KERNEL2 = KERNEL * KERNEL;
     SELF_DENSITY = MASS*POLY6*pow(KERNEL, 6);
-    //VISCOSITY= 3.25f * 17000.0f;//40.0f;
     VISCOSITY= 350000.0f;//40.0f;
 
     row = 600;
     column = 2;
-    num_particles = row*column; //+ 40;
+    num_particles = row*column;
 
     for (int i = 0; i < row; i++) {
-        float offset = 0.5 * i * KERNEL;
         for (int j = 0; j < column; j++) {
             int k = rand() % 2 ;
             float r = k == 0 ? 1.0f : 0.0;
@@ -34,7 +33,7 @@ ParticleSystem::ParticleSystem()
             float b = k == 2 ? 0.0f : 0.0;
             float x = 0.0f + j * 0.45 * KERNEL;
             float y = -0.5f + i * 0.45 * KERNEL;
-            Particles.push_back(Particle(x, y, 0.5f, r, g, b)); //, r * 200.0f - 100.0f, g * 200.0f - 100.0f));
+            Particles.push_back(Particle(x, y, 0.5f, r, g, b));
         }
 
     }
@@ -177,7 +176,6 @@ void ParticleSystem::Step() {
             Particles[i].g = 0.5f;
             Particles[i].b = 0.05f;
         }
-        //rho[i] = 1000.0f;
     }
 
 
