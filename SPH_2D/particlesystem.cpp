@@ -17,18 +17,11 @@ ParticleSystem::ParticleSystem()
     KERNEL2 = KERNEL * KERNEL;
     SELF_DENSITY = MASS*POLY6*pow(KERNEL, 6);
 
-    //world_size.x=1.28f;
-    //world_size.y=1.28f;
-    //wall_damping=-0.5f;
-    VISCOSITY=6.5f/ 200.0f ;
-    //surf_norm=6.0f;
-    //surf_coe=0.2f;
-
-
+    VISCOSITY=6.5f/ 200.0f;
 
     row = 30;
     column = 30;
-    num_particles = row*column; //+ 40;
+    num_particles = row*column;
 
     for (int i = 0; i < column; i++) {
         for (int j = 0; j < row; j++) {
