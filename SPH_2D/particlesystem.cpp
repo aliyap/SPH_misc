@@ -6,13 +6,13 @@ ParticleSystem::ParticleSystem()
 {
     GAS_STIFFNESS = 1.0f  * 10;
     KERNEL = 0.04f;
-    POLY6 = 315.0f/(64.0f * PI * pow(KERNEL, 9));
+    POLY6 = 315.0f/(64.0f * PI * pow(KERNEL, 3));
     TIMESTAMP = 0.003f;
     REST_DENSITY = 1000.0f;
     SPIKY = -45.0f/(PI * pow(KERNEL, 6));
     GRAVITY_X = 0.0f;
     GRAVITY_Y = -1.8f;
-    GRAD_POLY6 = -945/(32 * PI * pow(KERNEL, 9));
+    GRAD_POLY6 = 945/ (32 * PI * pow(KERNEL, 5));
     MASS = 0.018;
     KERNEL2 = KERNEL * KERNEL;
     SELF_DENSITY = MASS*POLY6*pow(KERNEL, 6);
@@ -23,6 +23,7 @@ ParticleSystem::ParticleSystem()
     column = 30;
     num_particles = row*column;
 
+    // place the initial particles
     for (int i = 0; i < column; i++) {
         for (int j = 0; j < row; j++) {
             float x = -0.25f + KERNEL*0.45f * i;
@@ -49,11 +50,9 @@ void ParticleSystem::createParticle() {
 }
 
 ParticleSystem::~ParticleSystem() {
-    //delete res;
 }
 
 float * ParticleSystem::Draw(float * res, float * colors) {
-    //float res[num_particles*4];
     for (int i = 0; i < num_particles; i++) {
         res[i*4] = Particles[i].x;
         res[i*4+1] = Particles[i].y;
@@ -98,7 +97,6 @@ void ParticleSystem::Step() {
 
 
     for (int i = 0; i < num_particles; i++) {
-       int num_neighbors = 0;
         for (int j = 0; j < num_particles; j++) {
             if (i == j) {
                 continue;
@@ -113,14 +111,15 @@ void ParticleSystem::Step() {
 
     // compute rho
     for (int i = 0; i < num_particles; i++) {
-        float rho_i = 0;
+        rho[i] = 0;
 
         for (int j = 0; j < num_particles; j++) {
             if (neighbors[i][j] < 0) continue;
             float r =  sqrt(neighbors[i][j]);
-            rho_i += MASS * 315/ (64*PI * pow(KERNEL, 3)) * pow(1-r*r/KERNEL2, 3) ;
+            rho[i] += MASS * POLY6 * pow(1-r*r/KERNEL2, 3) ;
         }
-        rho[i] = rho_i;
+
+        // colour based on the density
         if (rho[i] > REST_DENSITY + 50.0f ) {
             Particles[i].r = 1.0f;
             Particles[i].g = 0.0f;
@@ -134,7 +133,33 @@ void ParticleSystem::Step() {
             Particles[i].g = 1.0f;
             Particles[i].b = 0.0f;
         }
-        pressure_i[i] = GAS_STIFFNESS * (pow(rho_i/ REST_DENSITY, 7) -1);
+
+        // advection force
+        // VISCOSITY - based on Ihmsen et al, SPH in Computer Graphics, algorithm 1
+
+        /*
+        float temp_x = 0;
+        float temp_y = 0;
+        for (int j = 0; j < num_particles; j++) {
+            if (neighbors[i][j] < 0) continue;
+            float r = sqrt(neighbors[i][j]);
+            float grad_kernel_x = GRAD_POLY6 * (Particles[i].vx - Particles[j].vx) * (- pow(1 - r * r / KERNEL2, 2));
+            float grad_kernel_y = GRAD_POLY6 * (Particles[i].vy - Particles[j].vy) * (- pow(1 - r * r / KERNEL2, 2));
+            temp_x += 2 * MASS / rho[j] * (Particles[i].vx - Particles[j].vx) * r * grad_kernel_x / (r * r + 0.01 * KERNEL2);
+            temp_x += 2 * MASS / rho[j] * (Particles[i].vx - Particles[j].vx) * r * grad_kernel_x / (r * r + 0.01 * KERNEL2);
+        }
+        F_i[i][0] += MASS * VISCOSITY * temp_x;
+        F_i[i][1] += MASS * VISCOSITY * temp_y;
+
+        F_i[i][0] += temp_force * (Particles[i].vx - Particles[j].vx) ;
+        F_i[i][1] += temp_force * (Particles[i].vy - Particles[j].vy) ;
+        Particles[i].vx += (F_i[i][0] + GRAVITY_X) * TIMESTAMP / MASS ;
+        Particles[i].x += Particles[i].vx * TIMESTAMP;
+        Particles[i].vy += (F_i[i][1] + (-9.8)/90.0f ) * TIMESTAMP / MASS ;
+        */
+
+
+        pressure_i[i] = GAS_STIFFNESS * (pow(rho[i] / REST_DENSITY, 7) -1);
     }
 
     // compute pressure force
@@ -152,22 +177,14 @@ void ParticleSystem::Step() {
             F_i[i][1] -= (Particles[i].y - Particles[j].y) * temp_force ;// r;
 
             // VISCOSITY
-            temp_force = MASS * VISCOSITY * MASS / rho[j] * 2  * r * r / (r * r + 0.01 * KERNEL2) * 945/ (32 * PI * pow(KERNEL, 5)) * (-pow(1-r*r/KERNEL2, 2));
-            //cerr << "=== " <<  temp_force * (Particles[i].vx - Particles[j].vx) << endl;
-            //temp_force = MASS * VISCOSITY * MASS / rho[j] * 945.0f / (64.0f * PI * pow(KERNEL, 5.0f)) * (1 - r * r / KERNEL2) * (7.0f * r * r / KERNEL2 - 3.0f);
-            //cerr << "" <<  temp_force * (Particles[j].vx) << endl;
-            F_i[i][0] += temp_force * (Particles[i].vx - Particles[j].vx) ;
-            F_i[i][1] += temp_force * (Particles[i].vy - Particles[j].vy) ;
+            float dist_x = (Particles[i].x - Particles[j].x);
+            float dist_y = (Particles[i].y - Particles[j].y);
+            float temp_force_x = MASS * VISCOSITY * MASS / rho[j] * 2  * dist_x * dist_x / (dist_x * dist_x + 0.01 * KERNEL2) * GRAD_POLY6 * (-pow(1-r*r/KERNEL2, 2));
+            float temp_force_y = MASS * VISCOSITY * MASS / rho[j] * 2  * dist_y * dist_y / (dist_y * dist_y + 0.01 * KERNEL2) * GRAD_POLY6 * (-pow(1-r*r/KERNEL2, 2));
 
+            F_i[i][0] += temp_force_x * (Particles[i].vx - Particles[j].vx) ;
+            F_i[i][1] += temp_force_y * (Particles[i].vy - Particles[j].vy) ;
 
-            float rel_vel_x = Particles[j].evx - Particles[i].evx;
-            float rel_vel_y = Particles[j].evy - Particles[i].evy;
-            float visco_value=45.0f/(PI * pow(KERNEL, 6));
-            float visc_kernel=visco_value*(KERNEL-r);
-            //temp_force=v * viscosity * visc_kernel;
-            //F_i[i][0] += (Particles[i].x - Particles[j].x) * temp_force ;// r;
-            //F_i[i][1] += (Particles[i].y - Particles[j].y) * temp_force ;// r;
-            //cerr << r << endl;
         }
 
     }
@@ -206,7 +223,5 @@ void ParticleSystem::Step() {
             Particles[i].y = -0.5f + BOUNDARY;
         }
 
-        Particles[i].evx = (Particles[i].evx + Particles[i].vx) / 2;
-        Particles[i].evy = (Particles[i].evy + Particles[i].vy) / 2;
     }
 }
